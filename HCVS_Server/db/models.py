@@ -1,16 +1,15 @@
 from django.db import models
 
+
 # Create your models here.
 
-class User(models.Model):
-    name = models.CharField(max_length=20)
-    id_tpye = models.IntegerField()
-    id_number = models.CharField(max_length=20)
-    public_key = models.CharField(max_length=100)
 
-
-class Admin(User):
+class adminUser(models.Model):
     username = models.CharField(max_length=20)
-    password = models.CharField(max_length=20)
-    #权限定义
+    password = models.CharField(max_length=40)
+    name = models.CharField(max_length=20)
+    # 权限定义
     is_super = models.BooleanField(default=False)
+    can_GenNewCode = models.BooleanField(default=False)
+
+

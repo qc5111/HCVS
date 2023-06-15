@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>扫描二维码</title>
+
+
+</head>
+<body>
+  <h1>test</h1>
+
+  <video id="qr-video" width="320" height="240" autoplay></video>
+
+
+<script>
+  function hexToBytes(hexString) {
+  const bytes = [];
+
+  for (let i = 0; i < hexString.length; i += 2) {
+    const byte = parseInt(hexString.substr(i, 2), 16);
+    bytes.push(byte);
+  }
+
+  return bytes;
+  }
+  const privateKeyHead = new Uint8Array([
+  0x30, 0x81, 0x87, 0x02, 0x01, 0x00, 0x30, 0x13, 0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01,
+  0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, 0x04, 0x6d, 0x30, 0x6b, 0x02, 0x01, 0x01,
+  0x04, 0x20
+]);
+  //a14403420004
+  const privateKeyMiddle = new Uint8Array([0xa1, 0x44, 0x03, 0x42, 0x00, 0x04]);
+
+
+  let private_key_raw = "086b0c2c412b3addb65a0128d9f3f4082decf514913940756672643d43bd40117ecd50f9dd1efc266dc0480726ccfde8f5fed95c5db4cc21bb8462200c56b74806821e48ff16d9c7bfae93021297dfd8caa2620b662312ec527b3314cf96dee7";
+  private_key_raw = hexToBytes(private_key_raw);
+  //拼接key
+    let private_key = new Uint8Array(36+32+6+64);
+    private_key.set(privateKeyHead);
+    //取raw的前32位
+    private_key.set(private_key_raw.slice(0,32),36);
+    private_key.set(privateKeyMiddle,68);
+    //取raw的后64位
+    private_key.set(private_key_raw.slice(32,96),74);
+    //转换为buffer
+    private_key_buffer = private_key.buffer;
+
+
+
+  crypto.subtle.importKey(
+    "pkcs8",
+    private_key_buffer,
+    { name: "ECDSA", namedCurve: "P-256" },
+    true,
+    ["sign"]
+  ).then(privateCryptoKey => {
+      console.log(privateCryptoKey);
+      //尝试签名
+        const data = 'Hello World';
+        const dataBuffer = new TextEncoder().encode(data);
+        crypto.subtle.sign(
+          {
+            name: "ECDSA",
+            hash: { name: "SHA-256" },
+          },
+          privateCryptoKey,
+          dataBuffer
+        ).then(signature => {
+          console.log(signature);
+          //输出为hex
+            console.log(new Uint8Array(signature).reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), ''));
+            document.write(new Uint8Array(signature).reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), ''));
+        });
+
+
+  }
+
+  )
+
+
+  </script>
+</body>
+</html>

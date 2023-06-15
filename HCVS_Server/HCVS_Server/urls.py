@@ -16,10 +16,13 @@ Including another URLconf
 from django.urls import path
 
 from HCVS_Server import gen_new_code
-# from django.contrib import admin
-
+from HCVS_Server.admin import authorization, admin
+from HCVS_Server.user import login
 
 urlpatterns = [
     path("gen_new_code", gen_new_code.gen_new_code),
-    #    path('admin/', admin.site.urls),
+    path('admin/Login', authorization.Login),
+    path('admin/AjaxLogin', authorization.AjaxLogin),
+    path('admin/index', admin.index),
+    path("login", login.Login),
 ]

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+</head>
+<body>
+<script type="text/javascript" src="/assets/js/crypto-js.min.js"></script>
+<
+  <script>
+
+  function hexToUint8Array(hexString) {
+    // 将十六进制字符串转换为 Uint8Array
+    const uint8Array = new Uint8Array(hexString.length / 2);
+    for (let i = 0; i < hexString.length; i += 2) {
+      const byte = parseInt(hexString.substr(i, 2), 16);
+      uint8Array[i / 2] = byte;
+    }
+
+    return uint8Array;
+  }
+
+// 加密函数
+function encryptAES256(plaintext, key) {
+  if (key == null) {
+    key = window.crypto.getRandomValues(new Uint8Array(48));
+  }
+  let iv = CryptoJS.lib.WordArray.create(key.slice(0, 16));
+  let aesKey = CryptoJS.lib.WordArray.create(key.slice(16, 48));
+  let plaintext2 = CryptoJS.lib.WordArray.create(plaintext);
+  let encrypted = CryptoJS.AES.encrypt(
+      plaintext2,
+      aesKey,
+      {
+          iv: iv,
+          padding: CryptoJS.pad.NoPadding
+      }
+  );
+  const decodedData = atob(encrypted.toString());
+
+  // 将解码后的字符串转换为 Uint8Array
+  const enData = new Uint8Array(decodedData.length);
+  for (let i = 0; i < decodedData.length; i++) {
+    enData[i] = decodedData.charCodeAt(i);
+  }
+  //console.log(enData);
+  return {key, enData};
+}
+
+// 解密函数
+function decryptAES256(key, ciphertext) {
+    // 导入密钥材料
+  let iv = CryptoJS.lib.WordArray.create(key.slice(0, 16));
+  let aesKey = CryptoJS.lib.WordArray.create(key.slice(16, 48));
+  //加密文本转换为base64
+    let ciphertext2 = CryptoJS.enc.Base64.stringify(CryptoJS.lib.WordArray.create(ciphertext));
+    let decrypted = CryptoJS.AES.decrypt(
+        ciphertext2,
+        aesKey,
+        {
+            iv: iv,
+            padding: CryptoJS.pad.NoPadding
+        }
+    );
+    return hexToUint8Array(decrypted.toString());
+
+}
+
+
+// 示例用法
+const plaintext1 = new Uint8Array([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f]);
+let plaintext = new Uint8Array(32);
+plaintext.set(plaintext1, 0);
+plaintext.set(plaintext1, 16);
+let enData = "b381c0d81997fb89a739bf99cdfa64dd1cc7d67480afea995c9f2c6f55495a8a";
+let key = "e0501798e1e123eba4a10f6b79996e26fd48138291ee52b2d274007512ba8f845fc7d4bd284d1d9b22d7a6b54652f390";
+enData = hexToUint8Array(enData).buffer;
+key = hexToUint8Array(key);
+
+
+result = encryptAES256(plaintext,key)
+console.log(result.key);
+console.log(result.enData);
+
+
+
+data = decryptAES256(key, enData);
+console.log(data);
+document.write(data);
+
+
+  </script>
+</body>
+</html>
