@@ -12,7 +12,7 @@ def AuthorizationCheck(func):
             dbResult = db.adminUser.objects.filter(username=request.session["Username"])
             if dbResult.count() != 0:
                 return func(request, dbResult[0])
-        return HttpResponseRedirect("/Login")
+        return HttpResponseRedirect("/admin/login")
 
     return wrapTheFunction
 

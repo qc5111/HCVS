@@ -1,0 +1,233 @@
+
+
+  <!-- content start -->
+  <div class="admin-content">
+    <div class="admin-content-body">
+      <div class="am-cf am-padding">
+        <div class="am-fl am-cf"><strong class="am-text-primary am-text-lg">User Management</strong></div>
+      </div>
+
+      <hr>
+
+      <div class="am-g">
+        <div class="am-u-sm-12 am-u-md-6">
+          <div class="am-btn-toolbar">
+            <div class="am-btn-group am-btn-group-xs">
+              <button type="button" class="am-btn am-btn-default" onclick="genNewCode();"><span class="am-icon-qrcode"></span> Create User</button>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="am-u-sm-12 am-u-md-3">
+          <div class="am-input-group am-input-group-sm">
+            <input id="filter" type="text" class="am-form-field">
+          <span class="am-input-group-btn">
+            <button class="am-btn am-btn-default" type="button" onclick="getUser()">Search</button>
+          </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="am-g">
+        <div class="am-u-sm-12">
+          <form class="am-form">
+            <table class="am-table am-table-striped am-table-hover table-main">
+              <thead>
+              <tr>
+                  <th class="table-type">ID</th>
+                  <th class="table-type">Username</th>
+                  <th class="table-type">Status</th>
+                  <th class="table-set">Option</th>
+              </tr>
+              </thead>
+              <tbody id = "user-list">
+
+
+              </tbody>
+            </table>
+              <div id="total-and-page" class="am-cf">
+                  <p id="total">Total Matched: </p>
+                  <div class="am-fr">
+                    <ul id="page-control" class="am-pagination">
+                      <li><a href="javascript:PreviousPage()">«</a></li>
+                      <li class="am-active"><a href="#">1</a></li>
+                      <li><a href="#">2</a></li>
+                      <li><a href="#">3</a></li>
+                      <li><a href="#">4</a></li>
+                      <li><a href="#">5</a></li>
+                      <li><a href="javascript:NexPage()">»</a></li>
+                    </ul>
+                  </div>
+              </div>
+
+            <hr />
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="admin-content-footer">
+      <hr>
+      <p class="am-padding-left">© 2014 AllMobilize, Inc. Licensed under MIT license.</p>
+    </footer>
+
+  </div>
+  <!-- content end -->
+</div>
+<!-- 弹窗-->
+  <div class="am-modal am-modal-no-btn" tabindex="-1" id="create-modal">
+  <div class="am-modal-dialog">
+    <div class="am-modal-hd">User Create Successful
+      <a id="keyInfoClose" href="" class="am-close am-close-spin" data-am-modal-close>&times;</a>
+    </div>
+      <div class="am-modal-bd" id="key-info">
+      </div>
+
+  </div>
+</div>
+<a href="#" class="am-icon-btn am-icon-th-list am-show-sm-only admin-menu" data-am-offcanvas="{target: '#admin-offcanvas'}"></a>
+
+<footer>
+  <hr>
+  <p class="am-padding-left">© 2014 AllMobilize, Inc. Licensed under MIT license.</p>
+</footer>
+</body>
+</html>
+<script>
+let page = 1;
+function genNewCode(){
+    $.ajax({
+        url: "/admin/gen-new-code",
+        type: "GET",
+        success: function(data){
+            let $modal = $('#create-modal');
+            let $keyInfo = $('#key-info');
+            $keyInfo.html(data);
+            $modal.modal();
+        }
+    });
+}
+$(function(){
+    $('#create-modal').on('close.modal.amui', function(){
+        keyInfoClose();
+    });
+});
+
+function keyInfoClose(){
+    let $keyInfo = $('#key-info');
+    $keyInfo.html('');
+    getUser();
+}
+function getUser(){
+    $.ajax({
+        url: "/admin/get-user-list",
+        type: "GET",
+
+        data: {
+            page: page,
+            filter: $('#filter').val()
+        },
+        success: function(data){
+            $userList = $('#user-list');
+            //清空
+            $userList.html('');
+            //遍历并添加元素
+            for(let i = 0; i < data["userList"].length; i++){
+                let $tr = $('<tr></tr>');
+                let $tdId = $('<td></td>');
+                let $tdUsername = $('<td></td>');
+                let $tdStatus = $('<td></td>');
+                let $tdBar = $('<td></td>');
+                let $btnBar = $('<div class="am-btn-toolbar"></div>');
+                let $btnGroup = $('<div class="am-btn-group am-btn-group-xs"></div>');
+                let $btnActive = $('<button class="am-btn am-btn-default am-btn-xs am-text-secondary" onclick="Active('+data["userList"][i].id+')"> Active</button>');
+                let $btnInactive = $('<button class="am-btn am-btn-default am-btn-xs am-text-danger am-hide-sm-only" onclick="Inactive('+data["userList"][i].id+')"> Inactive</button>');
+                $tdId.html(data["userList"][i].id);
+                $tdUsername.html(Uint8Array_to_base64(intToBytes(data["userList"][i].id,6)));
+                $tdBar.append($btnBar);
+                $btnBar.append($btnGroup);
+                if (data["userList"][i].active === 1){
+                    $tdStatus.html('Active');
+                    $btnGroup.append($btnInactive);
+                }else{
+                    $tdStatus.html('Inactive');
+                    $btnGroup.append($btnActive);
+                }
+                $tr.append($tdId);
+                $tr.append($tdUsername);
+                $tr.append($tdStatus);
+                $tr.append($tdBar);
+                $userList.append($tr);
+            }
+            //更新总数与页数
+
+            $pageControl = $('#page-control');
+            $('#total').html('Total Matched: ' + data["totalUser"]);
+            $pageControl.html('');
+            let $liPrevious = $('<li><a href="javascript:PreviousPage()">«</a></li>');
+            let $liNext = $('<li><a href="javascript:NexPage()">»</a></li>');
+            if (page === 1){
+                $liPrevious.addClass('am-disabled');
+            }
+            $pageControl.append($liPrevious);
+            let showMinPage = page - 2;
+            if (showMinPage < 1){
+                showMinPage = 1;
+            }
+            for(let i = showMinPage; i <= showMinPage + 4; i++){
+                let $li = $('<li><a href="#">' + i + '</a></li>');
+                if (i === page){
+                    $li.addClass('am-active');
+                }
+                $pageControl.append($li);
+            }
+            $pageControl.append($liNext);
+        }
+    });
+}
+
+function NexPage(){
+    page++;
+    getUser();
+}
+function PreviousPage(){
+    if (page > 1){
+        page--;
+    }
+    getUser();
+}
+//添加搜索框回车事件
+$('#filter').bind('keypress',function(event){
+    if(event.keyCode == "13")
+    {
+        getUser();
+    }
+});
+function Active(id){
+    $.ajax({
+        url: "/admin/active-user",
+        type: "POST",
+        data: {
+            id: id
+        },
+        success: function(data){
+            getUser();
+        }
+    });
+}
+function Inactive(id){
+    $.ajax({
+        url: "/admin/inactive-user",
+        type: "POST",
+        data: {
+            id: id
+        },
+        success: function(data){
+            getUser();
+        }
+    });
+}
+getUser();
+</script>

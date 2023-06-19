@@ -15,6 +15,7 @@ class mysql(object):
 
     # 查询
     def select(self, sql):
+        # print(sql)
         # 执行sql语句 查询
         cursor = self.conn.cursor()
         cursor.execute(sql)

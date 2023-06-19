@@ -4,7 +4,7 @@ import pyotp
 from tools import myqrcode
 
 
-def gen_code(name="Vote System", issuer=""):
+def gen_code(name, issuer="Vote System"):
     secret_key = pyotp.random_base32()
     print(secret_key)
 

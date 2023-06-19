@@ -1,0 +1,55 @@
+<body>
+<div style="text-align: center;">
+    <h2>Voting In Progress</h2>
+    <hr>
+    <div id="voting">
+    </div>
+</div>
+
+<div style="text-align: center;">
+    <h2>Upcoming Vote</h2>
+    <hr>
+    <div id="coming">
+    </div>
+</div>
+
+<div style="text-align: center;">
+    <h2>Ended Vote</h2>
+    <hr>
+    <div id="end">
+
+    </div>
+
+</div>
+<hr>
+</body>
+</html>
+<script>
+function getVote(){
+    $.ajax({
+        url: "/get-vote-list",
+        type: "GET",
+        success: function(data){
+            for(let i = 0; i < data["nowVoteList"].length; i++){
+                let $button = $('<button type="button" class="am-btn am-btn-primary am-btn-block"></button>');
+                $button.text(data["nowVoteList"][i]["name"]);
+                $button.attr("onclick", "window.location.href='/vote?id=" + data["nowVoteList"][i]["id"] + "'");
+                $("#voting").append($button);
+            }
+            for(let i = 0; i < data["comingVoteList"].length; i++){
+                let $button = $('<button type="button" class="am-btn am-btn-secondary am-btn-block" disabled="true"></button>');
+                $button.text(data["comingVoteList"][i]["name"]);
+                $("#coming").append($button);
+            }
+            for(let i = 0; i < data["endVoteList"].length; i++){
+                let $button = $('<button type="button" class="am-btn am-btn-danger am-btn-block" disabled="true"></button>');
+                $button.text(data["endVoteList"][i]["name"]);
+                $("#end").append($button);
+            }
+
+        },
+    });
+}
+
+getVote();
+</script>

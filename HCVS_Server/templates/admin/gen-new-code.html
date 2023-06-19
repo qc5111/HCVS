@@ -1,0 +1,15 @@
+
+User: {{ idStr }}
+<div style="display: flex; justify-content: center;">
+<div style="display: flex; flex-direction: column; align-items: center;">
+    <div style="margin-bottom: 10px;">Private Key Code</div>
+    <div style="margin-bottom: 6px;">This key should print on the card</div>
+    <img width="200" height="200" src="data:image/png;base64,{{ image_private_key }}" alt="Base64 Image">
+</div>
+<div style="display: flex; flex-direction: column; align-items: center;">
+    <div style="margin-bottom: 10px;">OTP Code</div>
+    <div style="margin-bottom: 6px;">Scan by "Google Authenticator"</div>
+    <img width="200" height="200" src="data:image/png;base64,{{ image_otp }}" alt="Base64 Image">
+</div>
+</div>
+

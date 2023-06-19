@@ -15,14 +15,29 @@ Including another URLconf
 """
 from django.urls import path
 
-from HCVS_Server import gen_new_code
+from tools import gen_new_code
 from HCVS_Server.admin import authorization, admin
-from HCVS_Server.user import login
+from HCVS_Server.user import login, user
 
 urlpatterns = [
-    path("gen_new_code", gen_new_code.gen_new_code),
-    path('admin/Login', authorization.Login),
+    # path("gen_new_code", gen_new_code.gen_new_code),
+    path('admin/login', authorization.Login),
     path('admin/AjaxLogin', authorization.AjaxLogin),
     path('admin/index', admin.index),
+    path('admin', admin.index),
+    path('admin/', admin.index),
+    path('admin/user-management', admin.userManagement),
+    path('admin/gen-new-code', admin.genNewCode),
+    path('admin/get-user-list', admin.getUserList),
+    path('admin/active-user', admin.activeUser),
+    path('admin/inactive-user', admin.inactiveUser),
+    path('admin/vote-management', admin.voteManagement),
+    path('admin/create-vote', admin.createVote),
+    path('admin/get-vote-list', admin.getVoteList),
     path("login", login.Login),
+    path("", user.index),
+    path("index", user.index),
+    path("vote", user.vote),
+    path("get-vote-list", user.getVoteList),
+
 ]

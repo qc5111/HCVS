@@ -1,0 +1,53 @@
+<body>
+<div>
+    <h1>投票标题</h1>
+</div>
+<form class="am-form" data-am-validator>
+  <div class="am-form-group">
+    <label class="am-checkbox">
+      <input type="checkbox" name="cbx" value="ip" data-am-ucheck required minchecked="2" maxchecked="4"> iPhone
+    </label>
+    <label class="am-checkbox">
+      <input type="checkbox" name="cbx" value="im" data-am-ucheck> iMac
+    </label>
+    <label class="am-checkbox">
+      <input type="checkbox" name="cbx" value="mbp" data-am-ucheck> Macbook Pro
+    </label>
+    <label class="am-checkbox">
+      <input type="checkbox" name="cbx" value="sf" data-am-ucheck> 苏菲·麻索
+    </label>
+    <label class="am-checkbox">
+      <input type="checkbox" name="cbx" value="sur" data-am-ucheck> Surface
+    </label>
+    <label class="am-checkbox">
+      <input type="checkbox" name="cbx" value="rb" data-am-ucheck> Razer Blade
+    </label>
+  </div>
+</form>
+<div class="am-input-group">
+  <span class="am-input-group-label"><i class="am-icon-lock am-icon-fw"></i></span>
+  <input id="otp-input" type="number" class="am-form-field" placeholder="Password" onchange="otpNumberCheck(this)">
+</div>
+</body>
+</html>
+<script>
+  const otpInput = document.getElementById('otp-input');
+
+  otpInput.addEventListener('input', () => {
+      //去除可能输入的小数点
+        otpInput.value = otpInput.value.replace(/\D/g, '');
+        //最长6位，超过6位截取前6位
+        if (otpInput.value.length > 6) {
+            otpInput.value = otpInput.value.slice(0, 6);
+        }
+  });
+
+  //检查投票是否合法
+  //提交动态密码到服务端，换取publicKey和aesKey
+  //将页面上的动态密码框隐藏，并显示私钥扫描框
+  //用户点击私钥扫描框，调用摄像头扫描私钥二维码
+  //用aesKey解密私钥，完成与公钥拼接
+  //使用拼接完成的私钥对投票信息进行签名
+  //将签名后的投票信息提交到服务端
+  //服务端验证签名后返回投票结果
+</script>

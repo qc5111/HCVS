@@ -13,3 +13,31 @@ class adminUser(models.Model):
     can_GenNewCode = models.BooleanField(default=False)
 
 
+"""ID
+投票名
+开始时间
+结束时间
+持续时间（计算得出）
+选项（独立在其他表）
+最少选择数量
+最大选择数量"""
+
+
+class vote(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=20)
+    start_time = models.BigIntegerField()
+    end_time = models.BigIntegerField()
+    min_choice = models.IntegerField()
+    max_choice = models.IntegerField()
+    createUser = models.ForeignKey(adminUser, on_delete=models.CASCADE, default=1)
+
+
+class vote_choice(models.Model):
+    vote = models.ForeignKey(vote, on_delete=models.CASCADE)
+    seq = models.IntegerField()
+    name = models.CharField(max_length=20)
+
+    # 组合索引
+    class Meta:
+        unique_together = ("vote_id", "seq")
