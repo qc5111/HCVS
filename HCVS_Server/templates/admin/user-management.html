@@ -144,7 +144,7 @@ function getUser(){
                 let $btnGroup = $('<div class="am-btn-group am-btn-group-xs"></div>');
                 let $btnActive = $('<button class="am-btn am-btn-default am-btn-xs am-text-secondary" onclick="Active('+data["userList"][i].id+')"> Active</button>');
                 let $btnInactive = $('<button class="am-btn am-btn-default am-btn-xs am-text-danger am-hide-sm-only" onclick="Inactive('+data["userList"][i].id+')"> Inactive</button>');
-                $tdId.html(data["userList"][i].id);
+                console.log(intToBytes(data["userList"][i].id,6));
                 $tdUsername.html(Uint8Array_to_base64(intToBytes(data["userList"][i].id,6)));
                 $tdBar.append($btnBar);
                 $btnBar.append($btnGroup);

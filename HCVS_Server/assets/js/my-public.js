@@ -10,9 +10,10 @@ function setCookie(name, value, days) {
 
 function intToBytes(int, length) {
   const bytes = new Uint8Array(length);
-  for (let i = length - 1; i >= 0; i--) {
-    bytes[i] = int & 0xff;
-    int >>= 8;
+  for (let i = 0; i < length; i++) {
+    bytes[length - 1 - i] = int & 0xff;
+    int -= bytes[length - 1 - i];
+    int /= 256;
   }
   return bytes;
 }

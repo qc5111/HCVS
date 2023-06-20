@@ -1,48 +1,192 @@
 <body>
-<div>
-    <h1>投票标题</h1>
-</div>
-<form class="am-form" data-am-validator>
-  <div class="am-form-group">
-    <label class="am-checkbox">
-      <input type="checkbox" name="cbx" value="ip" data-am-ucheck required minchecked="2" maxchecked="4"> iPhone
-    </label>
-    <label class="am-checkbox">
-      <input type="checkbox" name="cbx" value="im" data-am-ucheck> iMac
-    </label>
-    <label class="am-checkbox">
-      <input type="checkbox" name="cbx" value="mbp" data-am-ucheck> Macbook Pro
-    </label>
-    <label class="am-checkbox">
-      <input type="checkbox" name="cbx" value="sf" data-am-ucheck> 苏菲·麻索
-    </label>
-    <label class="am-checkbox">
-      <input type="checkbox" name="cbx" value="sur" data-am-ucheck> Surface
-    </label>
-    <label class="am-checkbox">
-      <input type="checkbox" name="cbx" value="rb" data-am-ucheck> Razer Blade
-    </label>
-  </div>
-</form>
-<div class="am-input-group">
-  <span class="am-input-group-label"><i class="am-icon-lock am-icon-fw"></i></span>
-  <input id="otp-input" type="number" class="am-form-field" placeholder="Password" onchange="otpNumberCheck(this)">
+
+<div style="margin-left: 10%;margin-right: 10%;">
+<h1>{{ vote.name }}</h1>
+<h3></h3>
+    <form id="vote-form" class="am-form" data-am-validator>
+      <div class="am-form-group">
+          {% for key, value in vote.choiceList.items %}
+            <label class="am-checkbox">
+            {% if key == 1 %}
+                <input type="{{ vote.type }}" name="cbx" id="Choice{{ key }}" data-am-ucheck required minchecked="{{ vote.min_choice }}" maxchecked="{{ vote.max_choice }}"> {{ value }}
+            {% else %}
+                <input type="{{ vote.type }}" name="cbx" id="Choice{{ key }}" data-am-ucheck> {{ value }}
+            {% endif %}
+            </label>
+          {% endfor %}
+
+      </div>
+    <div class="am-input-group">
+      <span class="am-input-group-label"><i class="am-icon-lock am-icon-fw"></i></span>
+      <input id="otp-input" type="number" class="am-form-field" placeholder="Dynamic Password">
+    </div>
+    </form>
+
+    <div id="scan-div" class="am-g" style="display: none;">
+      <div class="am-u-lg-6 am-u-md-8 am-u-sm-centered">
+        <br>
+    <video id="qr-video" style="display: none; max-width: 100%; width: auto;"></video>
+
+          <div id="video-control" class="am-cf am-text-center" style="display: none;">
+    <button id="flash-toggle" class="am-btn am-btn-danger" >Flash <span id="flash-state">Off</span></button>
+    <button id="switch-camera" class="am-btn am-btn-secondary">Switch Camera</button>
+              <hr>
+              </div>
+    <div class="am-cf am-text-center">
+      <button id="btn-scan" class="am-btn am-btn-primary am-btn-sm" style="font-size: 20px;" onclick="startScan()">Scan QR Code Submit Vote</button>
+    </div>
+
+      </div>
+    </div>
+<p>© 2014 AllMobilize, Inc. Licensed under MIT license.</p>
 </div>
 </body>
 </html>
+<script src="/assets/js/qr-scanner.umd.min.js"></script>
+<script src="/assets/js/qr-scanner.legacy.min.js"></script>
+<script src="/assets/js/crypto-js.min.js"></script>
+<script src="/assets/js/my-encrypt.js"></script>
+<script src="/assets/js/my-qrcode-scan.js"></script>
+<script src="/assets/js/my-public.js"></script>
 <script>
   const otpInput = document.getElementById('otp-input');
+  let PublicKey = "";
+  let PrivateKeyCode = "";
+  let isVoted = false;
 
+  function timestampToDate(ts){
+      let date = new Date(ts);
+      return date.toLocaleString();
+
+  }
+  function getVoteData(){
+      let ts = intToBytes(Date.now(), 8);//8
+      let userId = intToBytes({{ userID }}, 6);//6
+      let voteId = intToBytes({{ vote.id }}, 4);//4
+      //parseInt("010001",2)
+      let voteBinary = "";
+        $("input[name='cbx']").each(function () {
+            if(this.checked){
+                voteBinary = "1" + voteBinary;
+            }else{
+                voteBinary = "0" + voteBinary;
+            }
+        });
+        //补齐到32位
+        voteBinary = voteBinary.padStart(32,"0");
+        //转换为Uint8Array
+        let voteInt = parseInt(voteBinary,2);
+        let voteRawData = intToBytes(voteInt, 4);
+        //拼接数据
+        let voteData = new Uint8Array(ts.length + userId.length + voteId.length + voteRawData.length);
+        voteData.set(ts);
+        voteData.set(userId, ts.length);
+        voteData.set(voteId, ts.length + userId.length);
+        voteData.set(voteRawData, ts.length + userId.length + voteId.length);
+        return voteData;
+
+  }
+  function uploadOTP(otp){
+      if(checkVote() === false){
+          return false;
+      }
+
+      $.ajax({
+          url: "/otp",
+          type: "POST",
+          data: {
+              otp: otp,
+          },
+          datatype: "json",
+          success: function (data) {
+              if(data.success===false){
+                    alert(data.msg);
+                    return false;
+              }
+              PublicKey = base64_to_Uint8Array(data.public_key);
+              PrivateKeyCode = base64_to_Uint8Array(data.private_key_code);
+              //隐藏动态密码输入框
+              $("#vote-form").hide();
+              //显示私钥扫描框
+              $("#scan-div").show();
+
+          },
+          error: function (data) {
+              alert("error");
+          }
+      });
+  }
+    async function setResult(result) {
+        if (isVoted === true) {
+            return false;
+        }
+        isVoted = true;
+        scanner.stop();
+        //重新检查投票是否合法
+        if (checkVote() === false) {
+            return false;
+        }
+        let voteData = getVoteData();
+        let QRResult = deCodeQRCodeData(result.data);
+        //加密的私钥
+        let private_key_raw = decryptAES256(PrivateKeyCode, QRResult.key);
+        let private_key = ecc_key_to_pkcs8(private_key_raw, PublicKey);
+
+        let signature = await ecc_sign2(private_key, voteData);
+        $.ajax({
+            url: "/submit-vote",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                vote_data: Uint8Array_to_base64(voteData),
+                signature: Uint8Array_to_base64(signature),
+            }),
+            datatype: "json",
+            success: function (data) {
+                if (data.success === false) {
+                    alert(data.message);
+                    window.location.href = "/";
+                    return false;
+                }
+                alert("Vote Success");
+                window.location.href = "/";
+            },
+            error: function (data) {
+                alert("error");
+            }
+        });
+        console.log(signature);
+
+
+    }
   otpInput.addEventListener('input', () => {
       //去除可能输入的小数点
         otpInput.value = otpInput.value.replace(/\D/g, '');
         //最长6位，超过6位截取前6位
+      if (otpInput.value.length === 6) {
+            let otp = otpInput.value;
+            otpInput.value = '';
+            uploadOTP(otp);
+        }
         if (otpInput.value.length > 6) {
             otpInput.value = otpInput.value.slice(0, 6);
         }
   });
+  $("h3").html("Start: " + timestampToDate({{ vote.start_time }})+ "<br>End: " + timestampToDate({{ vote.end_time }})+"<br>Max Choice: " + {{ vote.max_choice }}+", Min Choice: " + {{ vote.min_choice }});
+
 
   //检查投票是否合法
+  function checkVote(){
+        //检查是否选择了足够的选项
+        let checked = $("input[name='cbx']:checked").length;
+        if(checked < {{ vote.min_choice }} || checked > {{ vote.max_choice }}){
+            alert("The selected option is not in range");
+            return false;
+        }
+        return true;
+  }
+
+
   //提交动态密码到服务端，换取publicKey和aesKey
   //将页面上的动态密码框隐藏，并显示私钥扫描框
   //用户点击私钥扫描框，调用摄像头扫描私钥二维码

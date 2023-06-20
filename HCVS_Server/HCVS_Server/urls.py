@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.urls import path
 
+import HCVS_Server
 from tools import gen_new_code
 from HCVS_Server.admin import authorization, admin
 from HCVS_Server.user import login, user
@@ -37,7 +38,9 @@ urlpatterns = [
     path("login", login.Login),
     path("", user.index),
     path("index", user.index),
-    path("vote", user.vote),
     path("get-vote-list", user.getVoteList),
+    path("vote", user.vote),
+    path("otp", HCVS_Server.user.authorization.Otp),
+    path("submit-vote", user.submitVote),
 
 ]

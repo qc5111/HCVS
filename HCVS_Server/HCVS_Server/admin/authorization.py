@@ -32,3 +32,6 @@ def AjaxLogin(request):
         return HttpResponse("OK")
     else:
         return HttpResponse("ERROR")
+
+
+

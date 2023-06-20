@@ -78,6 +78,7 @@ def voteManagement(request, user):
 @AuthorizationCheck
 def createVote(request, user):
     createData = json.loads(request.body)
+    print(len(createData["voteName"]))
     new_vote = db.vote.objects.create(name=createData["voteName"],
                                       start_time=createData["startTime"],
                                       end_time=createData["endTime"],
@@ -87,6 +88,10 @@ def createVote(request, user):
                                       )
     for key in createData["choiceList"]:
         db.vote_choice.objects.create(vote=new_vote, seq=int(key), name=createData["choiceList"][key])
+    cursor = dbRaw.conn.cursor()
+    cursor.execute("CREATE TABLE vote_data_%d AS SELECT * FROM vote_template WHERE 1 = 0;" % new_vote.id)
+    dbRaw.conn.commit()
+    cursor.close()
     returnJson = {"success": True, "voteId": new_vote.id}
     return HttpResponse(json.dumps(returnJson, ensure_ascii=False), content_type="application/json")
 

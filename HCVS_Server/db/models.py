@@ -25,7 +25,7 @@ class adminUser(models.Model):
 
 class vote(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=64)
     start_time = models.BigIntegerField()
     end_time = models.BigIntegerField()
     min_choice = models.IntegerField()
@@ -36,8 +36,18 @@ class vote(models.Model):
 class vote_choice(models.Model):
     vote = models.ForeignKey(vote, on_delete=models.CASCADE)
     seq = models.IntegerField()
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=32)
 
     # 组合索引
     class Meta:
-        unique_together = ("vote_id", "seq")
+        unique_together = ("vote", "seq")
+
+
+# otp请求失败记录
+class otpFailRecord(models.Model):
+    user_id = models.BigIntegerField()
+    ipAddress = models.CharField(max_length=15)
+    time = models.BigIntegerField()
+
+    class Meta:
+        unique_together = ("user_id", "time")
