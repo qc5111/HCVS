@@ -42,8 +42,9 @@ function getVote(){
                 $("#coming").append($button);
             }
             for(let i = 0; i < data["endVoteList"].length; i++){
-                let $button = $('<button type="button" class="am-btn am-btn-danger am-btn-block" disabled="true"></button>');
+                let $button = $('<button type="button" class="am-btn am-btn-danger am-btn-block"></button>');
                 $button.text(data["endVoteList"][i]["name"]);
+                $button.attr("onclick", "window.location.href='/vote?id=" + data["endVoteList"][i]["id"] + "'");
                 $("#end").append($button);
             }
 

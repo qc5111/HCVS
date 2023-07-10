@@ -50,6 +50,9 @@ def vote(request, id):
         vote = db.vote.objects.get(id=int(request.GET.get("id")))
     except:
         return HttpResponseRedirect("/user/index")
+    # 如果投票没有开始则返回首页
+    if vote.start_time > time.time() * 1000:
+        return HttpResponseRedirect("/user/index")
     head = loader.get_template('user/head.html').render({"username": id["str"]}, request)
     voteJson = {"id": vote.id, "name": vote.name, "start_time": vote.start_time, "end_time": vote.end_time,
                 "min_choice": vote.min_choice, "max_choice": vote.max_choice, "choiceList": {}}
@@ -59,32 +62,38 @@ def vote(request, id):
         voteJson["type"] = "checkbox"
     for choice in vote.vote_choice_set.all():
         voteJson["choiceList"][choice.seq] = choice.name
-    # 判断是否已经投过票
+    # 判断是否已经投过票，或者投票是否已经结束
     vote_result = dbRaw.select("SELECT * FROM vote_data_%d WHERE user_id = %d" % (vote.id, id["int"]))
-    if len(vote_result) != 0:
+    if len(vote_result) != 0 or vote.end_time < time.time() * 1000:
         # 解析投票数据
         choice_str = ""
-        vote_result_int = vote_result[0]["vote_result"]
-        # 转换为二进制
-        vote_result_bin = bin(vote_result_int).zfill(32)
-        for i in range(32):
-            if vote_result_bin[i] == "1":
-                choice_str += voteJson["choiceList"][32 - i] + ", "
-        # 去掉最后的逗号
-        choice_str = choice_str[:-2]
-        voteJson["choice_str"] = choice_str
-        # 判断当前投票处于的区块高度
-        shouldInHeight = (vote_result[0]["timestamp"] - vote.start_time) // 600000 + 1
-        # 判断该区块是否已经被打包
-        chain = dbRaw.select("SELECT * FROM vote_chain_%d WHERE height = %d" % (vote.id, shouldInHeight))
-        if len(chain) == 0:
-            voteJson["status"] = "Pending Confirmation"
+        if len(vote_result) != 0:
+            vote_result_int = vote_result[0]["vote_result"]
+            vote_result_bin = bin(vote_result_int).zfill(32)
+            for i in range(32):
+                if vote_result_bin[i] == "1":
+                    choice_str += voteJson["choiceList"][32 - i] + ", "
+            # 去掉最后的逗号
+            choice_str = choice_str[:-2]
+            voteJson["choice_str"] = choice_str
+            # 判断当前投票处于的区块高度
+            shouldInHeight = (vote_result[0]["timestamp"] - vote.start_time) // 600000 + 1
+            # 判断该区块是否已经被打包
+            chain = dbRaw.select("SELECT * FROM vote_chain_%d WHERE height = %d" % (vote.id, shouldInHeight))
+            if len(chain) == 0:
+                voteJson["status"] = "Pending Confirmation"
+            else:
+                voteJson["status"] = "Confirmed by Height %d" % shouldInHeight
         else:
-            voteJson["status"] = "Confirmed by Height %d" % shouldInHeight
+            voteJson["choice_str"] = "You didn't vote."
+            voteJson["status"] = "Vote has ended."
+
+        # 转换为二进制
+
+
 
         # 获取投票结果
         totalResult = db.vote_result.objects.get(vote_id=vote.id)
-
         # 获取投票总数
         voteJson["total"] = totalResult.get_choice_total()
         totalResult = model_to_dict(totalResult)
