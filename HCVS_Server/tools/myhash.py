@@ -2,6 +2,7 @@ import hashlib
 import json
 from operator import itemgetter
 
+
 def format_data(data):
     if type(data) == str:
         data = data.encode('utf-8')
@@ -34,5 +35,3 @@ def sha1(data, format='bin'):
         return sha1_hash.hexdigest()
     else:
         return sha1_hash.digest()
-
-

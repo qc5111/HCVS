@@ -8,6 +8,7 @@ from HCVS_Server.admin.authorization import AuthorizationCheck
 from tools import gen_new_code, mybase64
 from HCVS_Server.settings import dbRaw
 import db.models as db
+from tools.hash_chain import writeChain
 
 
 @AuthorizationCheck
@@ -78,7 +79,10 @@ def voteManagement(request, user):
 @AuthorizationCheck
 def createVote(request, user):
     createData = json.loads(request.body)
-    print(len(createData["voteName"]))
+    # print(len(createData["voteName"]))
+    # 时间规划到10分钟
+    createData["startTime"] = createData["startTime"] - createData["startTime"] % 600000
+    createData["endTime"] = createData["endTime"] - createData["endTime"] % 600000
     new_vote = db.vote.objects.create(name=createData["voteName"],
                                       start_time=createData["startTime"],
                                       end_time=createData["endTime"],
@@ -89,9 +93,26 @@ def createVote(request, user):
     for key in createData["choiceList"]:
         db.vote_choice.objects.create(vote=new_vote, seq=int(key), name=createData["choiceList"][key])
     cursor = dbRaw.conn.cursor()
-    cursor.execute("CREATE TABLE vote_data_%d AS SELECT * FROM vote_template WHERE 1 = 0;" % new_vote.id)
+    cursor.execute("CREATE TABLE vote_data_%d AS SELECT * FROM vote_data_template WHERE 1 = 0;" % new_vote.id)
+    cursor.execute("CREATE TABLE vote_chain_%d AS SELECT * FROM vote_chain_template WHERE 1 = 0;" % new_vote.id)
     dbRaw.conn.commit()
     cursor.close()
+    # 写入0号区块
+    # 0号区块数据
+    blockData = b"\x00"  # 版本
+    blockData += len(createData["voteName"]).to_bytes(1, byteorder="big") + createData[
+        "voteName"].encode()  # 投票名称长度 + 投票名称
+    blockData += b"\x08" + createData["startTime"].to_bytes(8, byteorder="big")  # 开始时间长度 + 开始时间
+    blockData += b"\x08" + createData["endTime"].to_bytes(8, byteorder="big")  # 结束时间长度 + 结束时间
+    blockData += b"\x01" + createData["minChoice"].to_bytes(1, byteorder="big")  # 最小选择长度 + 最小选择
+    blockData += b"\x01" + createData["maxChoice"].to_bytes(1, byteorder="big")  # 最大选择长度 + 最大选择
+    for key in createData["choiceList"]:
+        blockData += len(createData["choiceList"][key]).to_bytes(1, byteorder="big") + createData["choiceList"][
+            key].encode()  # 选项长度 + 选项
+    # 写入0号区块
+    writeChain(new_vote.id, blockData, 0, createData["startTime"]-1)
+    # 创建投票数据表
+    db.vote_result.objects.create(vote=new_vote)
     returnJson = {"success": True, "voteId": new_vote.id}
     return HttpResponse(json.dumps(returnJson, ensure_ascii=False), content_type="application/json")
 
@@ -107,7 +128,9 @@ def getVoteList(request, user):
     returnJson = {"totalVote": dbResult.count(), "voteList": []}
     dbResult = dbResult[(Page - 1) * 10:Page * 10]
     for vote in dbResult:
-        voteJson = {"id": vote.id, "name": vote.name, "start_time": vote.start_time, "end_time": vote.end_time,"min_choice": vote.min_choice, "max_choice": vote.max_choice, "createUser": vote.createUser.name, "choiceList": {}}
+        voteJson = {"id": vote.id, "name": vote.name, "start_time": vote.start_time, "end_time": vote.end_time,
+                    "min_choice": vote.min_choice, "max_choice": vote.max_choice, "createUser": vote.createUser.name,
+                    "choiceList": {}}
         for choice in vote.vote_choice_set.all():
             voteJson["choiceList"][choice.seq] = choice.name
         returnJson["voteList"].append(voteJson)

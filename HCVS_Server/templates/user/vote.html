@@ -53,12 +53,6 @@
   let PublicKey = "";
   let PrivateKeyCode = "";
   let isVoted = false;
-
-  function timestampToDate(ts){
-      let date = new Date(ts);
-      return date.toLocaleString();
-
-  }
   function getVoteData(){
       let ts = intToBytes(Date.now(), 8);//8
       let userId = intToBytes({{ userID }}, 6);//6

@@ -52,3 +52,8 @@ function deCodeQRCodeData(data){
     //base64编码idBytes，得到idStr
     return {id, key};
 }
+
+function timestampToDate(ts){
+    let date = new Date(ts);
+    return date.toLocaleString();
+}

@@ -13,12 +13,20 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import threading
+
 from django.urls import path
 
 import HCVS_Server
+from HCVS_Server import test
 from tools import gen_new_code
 from HCVS_Server.admin import authorization, admin
 from HCVS_Server.user import login, user
+from tools.hash_chain import scheduled_task
+
+# 需要DB的初始化
+# scheduled_task
+threading.Thread(target=scheduled_task).start()
 
 urlpatterns = [
     # path("gen_new_code", gen_new_code.gen_new_code),
@@ -42,5 +50,6 @@ urlpatterns = [
     path("vote", user.vote),
     path("otp", HCVS_Server.user.authorization.Otp),
     path("submit-vote", user.submitVote),
+    path("test", test.test),
 
 ]

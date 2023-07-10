@@ -1,0 +1,61 @@
+<body>
+
+<div id="main-div" style="margin-left: 3%;margin-right: 3%;">
+<h1>{{ vote.name }}</h1>
+<h3 id="vote-info"></h3>
+    <form id="vote-form" class="am-form" data-am-validator>
+      <div class="am-form-group">
+      <table class="am-table am-table-striped am-table-hover table-main">
+          <thead>
+          <tr>
+              <th class="table-title">Choice Name</th>
+                <th class="table-title">Choice Amount</th>
+              <th class="table-title">Choice Percent</th>
+          </tr>
+          </thead>
+      <tbody>
+          {% for key, item in vote.choiceList.items %}
+              <tr>
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.count }}</td>
+                  <td>
+                  <div class="am-progress am-progress-sm" style="height: 20px">
+                      <div class="am-progress-bar am-progress-bar-success" style="width: {{ item.percent }}%; color: black;">{{ item.percent }}%</div>
+                  </div>
+                  </td>
+              </tr>
+          {% endfor %}
+      </tbody>
+      </table>
+
+      </div>
+
+    </form>
+
+<p>© 2014 AllMobilize, Inc. Licensed under MIT license.</p>
+</div>
+</body>
+</html>
+<script src="/assets/js/my-public.js"></script>
+<script>
+    $("#vote-info").html("Start: " + timestampToDate({{ vote.start_time }})+ "<br>End: " + timestampToDate({{ vote.end_time }})+"<br>Max Choice: " + {{ vote.max_choice }}+", Min Choice: " + {{ vote.min_choice }}+"<br>Your Choice: {{ vote.choice_str }}<br>Status: {{ vote.status }}");
+
+function resize() {
+    console.log(123);
+    let mainDiv = document.getElementById('main-div');
+    let width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    let height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+    if (width > height) {
+        mainDiv.style.marginLeft = '10%';
+        mainDiv.style.marginRight = '10%';
+    } else {
+        mainDiv.style.marginLeft = '3%';
+        mainDiv.style.marginRight = '3%';
+  }
+}
+window.addEventListener('resize', function() {
+    resize();
+});
+resize();
+
+</script>
