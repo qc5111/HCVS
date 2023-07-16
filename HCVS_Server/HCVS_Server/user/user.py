@@ -90,10 +90,16 @@ def vote(request, id):
 
         # 转换为二进制
 
-
-
         # 获取投票结果
         totalResult = db.vote_result.objects.get(vote_id=vote.id)
+        # 获取当前投票高度
+        print(vote.chain_height)
+        voteJson["height"] = vote.chain_height
+        # 计算投票最高高度
+        voteJson["maxHeight"] = (vote.end_time - vote.start_time) // 600000
+        # 获取最高高度的Hash值
+        nowHash = dbRaw.select("SELECT md5,sha1 FROM vote_chain_%d WHERE height = %d" % (vote.id, voteJson["height"]))
+        voteJson["nowHash"] = base64.b64encode(nowHash[0]["md5"] + nowHash[0]["sha1"]).decode("utf-8")
         # 获取投票总数
         voteJson["total"] = totalResult.get_choice_total()
         totalResult = model_to_dict(totalResult)
@@ -101,7 +107,8 @@ def vote(request, id):
         for key in voteJson["choiceList"]:
             voteJson["choiceList"][key] = {"name": voteJson["choiceList"][key]}
             voteJson["choiceList"][key]["count"] = totalResult["Choice_" + str(key)]
-            voteJson["choiceList"][key]["percent"] = "{:.2f}".format(voteJson["choiceList"][key]["count"] / voteJson["total"] * 100)
+            voteJson["choiceList"][key]["percent"] = "{:.2f}".format(
+                totalResult["Choice_" + str(key)] / voteJson["total"] * 100)
 
         # print(voteJson["choiceList"])
         body = loader.get_template('user/vote_result.html').render({"vote": voteJson, "userID": id["int"]}, request)

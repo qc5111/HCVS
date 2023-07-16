@@ -16,9 +16,9 @@ Including another URLconf
 import threading
 
 from django.urls import path
-
 import HCVS_Server
 from HCVS_Server import test
+
 from tools import gen_new_code
 from HCVS_Server.admin import authorization, admin
 from HCVS_Server.user import login, user
@@ -26,7 +26,9 @@ from tools.hash_chain import scheduled_task
 
 # 需要DB的初始化
 # scheduled_task
-threading.Thread(target=scheduled_task).start()
+ChainBuilderThread = threading.Thread(target=scheduled_task)
+ChainBuilderThread.start()
+from HCVS_Server.verifier import verifier
 
 urlpatterns = [
     # path("gen_new_code", gen_new_code.gen_new_code),
@@ -50,6 +52,10 @@ urlpatterns = [
     path("vote", user.vote),
     path("otp", HCVS_Server.user.authorization.Otp),
     path("submit-vote", user.submitVote),
-    path("test", test.test),
+    # 验证器
+    path("verifier/getVoteList", verifier.getVoteList),
+    path("verifier/getGlobalTime", verifier.getGlobalTime),
+    path("verifier/getUserList", verifier.getUserList),
+    path("verifier/getVoteData", verifier.getVoteData),
 
 ]

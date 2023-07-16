@@ -38,7 +38,7 @@
 </html>
 <script src="/assets/js/my-public.js"></script>
 <script>
-    $("#vote-info").html("Start: " + timestampToDate({{ vote.start_time }})+ "<br>End: " + timestampToDate({{ vote.end_time }})+"<br>Max Choice: " + {{ vote.max_choice }}+", Min Choice: " + {{ vote.min_choice }}+"<br>Your Choice: {{ vote.choice_str }}<br>Status: {{ vote.status }}");
+    $("#vote-info").html("Start: " + timestampToDate({{ vote.start_time }})+ "<br>End: " + timestampToDate({{ vote.end_time }})+"<br>Max Choice: {{ vote.max_choice }}, Min Choice: {{ vote.min_choice }}<br>Your Choice: {{ vote.choice_str }}<br>Status: {{ vote.status }}<br>Now Hash Height: {{ vote.height }}, Hash: {{ vote.nowHash }}<br>Max Hash Height: {{ vote.maxHeight}}");
 
 function resize() {
     console.log(123);

@@ -24,9 +24,9 @@ def calcVote(vote, timestamp):
     while True:
         total_vote_result = [0] * 32
         block_data = b""
-        print(start_ts, end_ts)
-        print(start_ts - end_ts)
-        if start_ts > end_ts or start_ts >= vote.end_time:
+        # print(start_ts, end_ts)
+        # print(start_ts - end_ts)
+        if start_ts + 600000 > end_ts or start_ts + 600000 > vote.end_time:
             break
         # 获取区块数据
         dbResult = dbRaw.select(
@@ -107,11 +107,12 @@ def calcVotes(timestamp):
     votes = db.vote.objects.exclude(chain_height=(F('end_time') - F('start_time')) / 600000)
     for vote in votes:
         # 筛选出未计算的投票
-        should_chain_height = (max_ts - vote.start_time) / 600000
+        should_chain_height = (max_ts - vote.start_time) / 600000 + 1
         max_chain_height = (vote.end_time - vote.start_time) / 600000
         if should_chain_height > max_chain_height:
             should_chain_height = max_chain_height
-        print(should_chain_height, vote.chain_height)
+        # print(should_chain_height, vote.chain_height)
+        # print(should_chain_height, vote.chain_height)
         if should_chain_height > vote.chain_height:
             # print("vote: %s" % vote.name)
             # print(should_chain_height - vote.chain_height)
@@ -127,4 +128,4 @@ def scheduled_task():
             last_job_time = nowTime
             calcVotes(nowTime)
         time.sleep(0.5)
-        # print("等待！")
+        # print("等待！%d" % nowTime)
