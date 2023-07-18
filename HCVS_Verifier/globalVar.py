@@ -5,3 +5,4 @@ import threading
 UserListBinLock = threading.Lock()
 VoteRawBinLock = {}
 ServerTime = 0
+VoteID2RowID = {}

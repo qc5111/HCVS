@@ -1,3 +1,4 @@
+import base64
 import threading
 import globalVar
 from PyQt5 import QtCore
@@ -25,8 +26,22 @@ class MyMainWindow(QMainWindow, UI.Ui_MainWindow):
     def __init__(self):
         super(MyMainWindow, self).__init__()
         self.setupUi(self)
-        self.tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        # self.tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Interactive)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeToContents)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(8, QtWidgets.QHeaderView.ResizeToContents)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(9, QtWidgets.QHeaderView.ResizeToContents)
+
         self.tableWidget.setEditTriggers(QTableWidget.NoEditTriggers)  # 禁止编辑
+        self.tableWidget.setColumnWidth(1, 1)
+        self.tableWidget.setColumnWidth(2, 5)
         self.tableWidget.setContextMenuPolicy(Qt.CustomContextMenu)  # 允许右键产生子菜单
         self.tableWidget.customContextMenuRequested.connect(self.showContextMenu)  # 绑定右键菜单
         # 按钮事件注册
@@ -35,22 +50,17 @@ class MyMainWindow(QMainWindow, UI.Ui_MainWindow):
         # 读取配置文件
         configs = config.getConfig()
         self.lineEdit.setText(configs["Data"]["path"])
+        self.refresh()
         # 启动各种线程
-        # 启动时间同步线程
-        syncTimeStopFlag = threading.Event()  # 用于停止线程
-        thread1 = ServerAPI.syncGlobalTime(syncTimeStopFlag)
         syncUserListStopFlag = threading.Event()  # 用于停止线程
         thread2 = ServerAPI.syncUserList(syncUserListStopFlag, self)
         test = threading.Event()  # 用于停止线程
-        thread3 = ServerAPI.syncVoteData(test, self, 17)
+        thread3 = ServerAPI.syncVoteData(test, self, 18)
         # 测试读取一个raw
-        with open(r"C:\Users\24773\HCVS_Verifier\data\VoteRaw\17.bin", "rb") as f:
-            raw = f.read()
-        print(raw)
-        print(hash_chain.verifyVote(raw))
-
-        self.refresh()
-        # hash_chain.calcVote(18)
+        # with open(r"C:\Users\24773\HCVS_Verifier\data\VoteRaw\17.bin", "rb") as f:
+        #    raw = f.read()
+        # print(raw)
+        # print(hash_chain.verifyVote(raw))
 
     def showContextMenu(self, pos):
         # 获取所选行的索引
@@ -121,6 +131,7 @@ class MyMainWindow(QMainWindow, UI.Ui_MainWindow):
         # 重新添加表格内容
         self.tableWidget.setRowCount(len(ServerData["voteList"]))
         for i in range(len(ServerData["voteList"])):
+            globalVar.VoteID2RowID[ServerData["voteList"][i]["id"]] = i
             # print(ServerData["voteList"][i]["id"])
             self.tableWidget.setItem(i, 0, QtWidgets.QTableWidgetItem(str(ServerData["voteList"][i]["id"])))  # id
             self.tableWidget.setItem(i, 1, QtWidgets.QTableWidgetItem(ServerData["voteList"][i]["name"]))  # name
@@ -143,13 +154,27 @@ class MyMainWindow(QMainWindow, UI.Ui_MainWindow):
                 self.tableWidget.item(i, 5).setForeground(QtGui.QBrush(QtGui.QColor(0, 255, 0)))  # 绿色
             self.tableWidget.setItem(i, 6, QtWidgets.QTableWidgetItem(
                 str(ServerData["voteList"][i]["chain_height"])))  # chainHeight
+            VoteChainPath = os.path.join(configs["Data"]["path"], "VoteChain")
+            VoteChainFilePath = os.path.join(VoteChainPath, "%d.bin" % ServerData["voteList"][i]["id"])
+            if not os.path.exists(VoteChainFilePath):
+                self.tableWidget.setItem(i, 7, QtWidgets.QTableWidgetItem("None"))
+                self.tableWidget.setItem(i, 8, QtWidgets.QTableWidgetItem("None"))
+            else:
+                # 根据文件大小显示区块数量
+                localHeight = (os.path.getsize(VoteChainFilePath)-8) // 72 -1
+                self.tableWidget.setItem(i, 7, QtWidgets.QTableWidgetItem(str(localHeight)))
+                # 读取最后36个字节
+                with open(VoteChainFilePath, "rb") as f:
+                    f.seek(-36, 2)
+                    data = f.read()
+                self.tableWidget.setItem(i, 8, QtWidgets.QTableWidgetItem(base64.b64encode(data).decode("utf-8")))
+
             # 判断本地是否存在该投票的配置
             # 根据本地配置文件判断是否跟踪
-            if configs["Vote_"+str(ServerData["voteList"][i]["id"])] == "1":
-                self.tableWidget.setItem(i, 8, QtWidgets.QTableWidgetItem("Yes"))
+            if configs["Vote_" + str(ServerData["voteList"][i]["id"])] == "1":
+                self.tableWidget.setItem(i, 9, QtWidgets.QTableWidgetItem("Yes"))
             else:
-                self.tableWidget.setItem(i, 8, QtWidgets.QTableWidgetItem("No"))
-
+                self.tableWidget.setItem(i, 9, QtWidgets.QTableWidgetItem("No"))
 
 
 if __name__ == '__main__':

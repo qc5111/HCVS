@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1178</width>
-    <height>491</height>
+    <width>1357</width>
+    <height>569</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -137,6 +137,11 @@
       <column>
        <property name="text">
         <string>Local Height</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Now Hash</string>
        </property>
       </column>
       <column>

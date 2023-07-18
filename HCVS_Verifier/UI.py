@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1178, 491)
+        MainWindow.resize(1357, 569)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setAutoFillBackground(False)
         self.centralwidget.setObjectName("centralwidget")
@@ -69,7 +69,7 @@ class Ui_MainWindow(object):
         self.tableWidget = QtWidgets.QTableWidget(self.centralwidget)
         self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidget.setObjectName("tableWidget")
-        self.tableWidget.setColumnCount(9)
+        self.tableWidget.setColumnCount(10)
         self.tableWidget.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(0, item)
@@ -89,6 +89,8 @@ class Ui_MainWindow(object):
         self.tableWidget.setHorizontalHeaderItem(7, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(8, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget.setHorizontalHeaderItem(9, item)
         self.tableWidget.horizontalHeader().setCascadingSectionResizes(True)
         self.verticalLayout_2.addWidget(self.tableWidget)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -122,4 +124,6 @@ class Ui_MainWindow(object):
         item = self.tableWidget.horizontalHeaderItem(7)
         item.setText(_translate("MainWindow", "Local Height"))
         item = self.tableWidget.horizontalHeaderItem(8)
+        item.setText(_translate("MainWindow", "Now Hash"))
+        item = self.tableWidget.horizontalHeaderItem(9)
         item.setText(_translate("MainWindow", "Track"))

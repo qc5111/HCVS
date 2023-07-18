@@ -6,6 +6,7 @@ import requests
 
 import config
 import globalVar
+import hash_chain
 from public import thread_decorator
 
 
@@ -23,6 +24,7 @@ def getVoteList():
         config.setConfig(NodeName, "min_choice", vote["min_choice"])
         config.setConfig(NodeName, "max_choice", vote["max_choice"])
         config.setConfig(NodeName, "chain_height", vote["chain_height"])
+        config.setConfig(NodeName, "total_choice", len(vote["choiceList"]))
         for choice in vote["choiceList"]:
             config.setConfig(NodeName, "choice_"+str(choice["seq"]), choice["name"])
 
@@ -53,18 +55,15 @@ def getVoteData(voteId, startTime):
         return None
 
 
-@thread_decorator
-def syncGlobalTime(stop_flag):
-    while not stop_flag.is_set():
-        # 获取服务器时间
-        URL = "https://hcvs.gtvps.com/verifier/getGlobalTime"
-        response = requests.get(URL)
-        if response.status_code == 200:
-            globalVar.ServerTime = response.json()["ServerTime"]
-            # print(globalVar.ServerTime)
-        else:
-            print("获取服务器时间失败")
-        time.sleep(60)
+def syncGlobalTime():
+    # 获取服务器时间
+    URL = "https://hcvs.gtvps.com/verifier/getGlobalTime"
+    response = requests.get(URL)
+    if response.status_code == 200:
+        globalVar.ServerTime = response.json()["ServerTime"]
+        # print(globalVar.ServerTime)
+    else:
+        print("获取服务器时间失败")
 
 
 @thread_decorator
@@ -174,5 +173,10 @@ def syncVoteData(stop_flag, UI, voteID):
             globalVar.VoteRawBinLock[voteID].release()
             startTimestamp = int.from_bytes(voteData[-86:-78], byteorder="big") + 1
         else:
+            # 数据同步完成，准许计算区块
+            # 先同步ServerTime
+            syncGlobalTime()
+            # 计算区块
+            hash_chain.calcVote(voteID, UI)
             # 如果没有投票数据，则休眠一段时间后再次尝试
             time.sleep(10)
