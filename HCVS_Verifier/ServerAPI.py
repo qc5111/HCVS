@@ -15,8 +15,11 @@ def getVoteList():
     response = requests.get(URL)
     # 遍历并存储到配置文件
     voteData = response.json()
+    configs = config.getConfig()
     for vote in voteData["voteList"]:
         NodeName = "Vote_" + str(vote["id"])
+        if NodeName not in configs:
+            config.setConfig(NodeName, "track", "No")
         config.setConfig(NodeName, "id", vote["id"])
         config.setConfig(NodeName, "name", vote["name"])
         config.setConfig(NodeName, "start_time", vote["start_time"])
@@ -24,6 +27,7 @@ def getVoteList():
         config.setConfig(NodeName, "min_choice", vote["min_choice"])
         config.setConfig(NodeName, "max_choice", vote["max_choice"])
         config.setConfig(NodeName, "chain_height", vote["chain_height"])
+
         config.setConfig(NodeName, "total_choice", len(vote["choiceList"]))
         for choice in vote["choiceList"]:
             config.setConfig(NodeName, "choice_"+str(choice["seq"]), choice["name"])

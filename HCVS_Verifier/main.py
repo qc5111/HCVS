@@ -22,6 +22,7 @@ import public
 class MyMainWindow(QMainWindow, UI.Ui_MainWindow):
     tabList = []
     tabWidgetList = []
+    voteSyncThreadDict = {}
 
     def __init__(self):
         super(MyMainWindow, self).__init__()
@@ -54,8 +55,8 @@ class MyMainWindow(QMainWindow, UI.Ui_MainWindow):
         # 启动各种线程
         syncUserListStopFlag = threading.Event()  # 用于停止线程
         thread2 = ServerAPI.syncUserList(syncUserListStopFlag, self)
-        test = threading.Event()  # 用于停止线程
-        thread3 = ServerAPI.syncVoteData(test, self, 18)
+        # test = threading.Event()  # 用于停止线程
+        # thread3 = ServerAPI.syncVoteData(test, self, 18)
         # 测试读取一个raw
         # with open(r"C:\Users\24773\HCVS_Verifier\data\VoteRaw\17.bin", "rb") as f:
         #    raw = f.read()
@@ -69,33 +70,42 @@ class MyMainWindow(QMainWindow, UI.Ui_MainWindow):
         if selected_row >= 0:
             # 创建菜单
             menu = QMenu(self)
-            if self.tableWidget.item(selected_row, 8).text() == "Yes":
+            if self.tableWidget.item(selected_row, 9).text() == "Yes":
                 track_action = menu.addAction("Untrack")
                 track_action.triggered.connect(lambda: self.unTrack(selected_row))
             else:
                 track_action = menu.addAction("Track")
                 track_action.triggered.connect(lambda: self.track(selected_row))
-            recalculate_action = menu.addAction("Recalculate")
-            recalculate_action.triggered.connect(lambda: self.reCalc(selected_row))
-            recalculate_action = menu.addAction("Find User")
-            recalculate_action.triggered.connect(lambda: self.findUser(selected_row))
+            # recalculate_action = menu.addAction("Recalculate")
+            # recalculate_action.triggered.connect(lambda: self.reCalc(selected_row))
+            # recalculate_action = menu.addAction("Find User")
+            # recalculate_action.triggered.connect(lambda: self.findUser(selected_row))
 
             # 显示菜单
             menu.popup(QCursor.pos())
 
+    # def switch_button(self, row, column):
     def track(self, row):
         # 获取row行的id
         id = self.tableWidget.item(row, 0).text()
         # 设置该行的track状态为Yes
-        self.tableWidget.setItem(row, 8, QtWidgets.QTableWidgetItem("Yes"))
-        print(id)
+        self.tableWidget.setItem(row, 9, QtWidgets.QTableWidgetItem("Yes"))
+        # 写入配置文件
+        config.setConfig("Vote_" + id, "track", "Yes")
+        # 启动线程
+        self.voteSyncThreadDict[int(id)] = threading.Event()  # 用于停止线程
+        ServerAPI.syncVoteData(self.voteSyncThreadDict[int(id)], self, int(id))
+
 
     def unTrack(self, row):
         # 获取row行的id
         id = self.tableWidget.item(row, 0).text()
         # 设置该行的track状态为No
-        self.tableWidget.setItem(row, 8, QtWidgets.QTableWidgetItem("No"))
-        print(id)
+        self.tableWidget.setItem(row, 9, QtWidgets.QTableWidgetItem("No"))
+        # 写入配置文件
+        config.setConfig("Vote_" + id, "track", "No")
+        # 停止线程
+        self.voteSyncThreadDict[int(id)].set()
 
     def reCalc(self, row):
         print("reCalc", row)
@@ -171,8 +181,14 @@ class MyMainWindow(QMainWindow, UI.Ui_MainWindow):
 
             # 判断本地是否存在该投票的配置
             # 根据本地配置文件判断是否跟踪
-            if configs["Vote_" + str(ServerData["voteList"][i]["id"])] == "1":
+            # print(configs["Vote_" + str(ServerData["voteList"][i]["id"])]["track"])
+
+            if configs["Vote_" + str(ServerData["voteList"][i]["id"])]["track"] == "Yes":
                 self.tableWidget.setItem(i, 9, QtWidgets.QTableWidgetItem("Yes"))
+                # 启动线程
+                self.voteSyncThreadDict[int(ServerData["voteList"][i]["id"])] = threading.Event()  # 用于停止线程
+                ServerAPI.syncVoteData(self.voteSyncThreadDict[int(ServerData["voteList"][i]["id"])], self,
+                                       int(ServerData["voteList"][i]["id"]))
             else:
                 self.tableWidget.setItem(i, 9, QtWidgets.QTableWidgetItem("No"))
 

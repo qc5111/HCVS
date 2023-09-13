@@ -150,7 +150,11 @@ def submitVote(request, id):
     # vote_result_int = int.from_bytes(vote_data[18:22], byteorder="big")
     # vote_result = bin(vote_result_int)[2:].zfill(32)
     vote_result = decompress_vote(vote_data)
-
+    # 检查投票时间偏差与当前系统时间偏差是否超过30秒
+    if abs(vote_result["timestamp"] - time.time() * 1000) > 30000:
+        return HttpResponse("{\"success\": false, \"message\": \"Timestamp Error, please check you local time!\"}",
+                            content_type="application/json")
+    # 检查投票用户是否为当前用户
     if vote_result["user_id"] != id["int"]:
         return HttpResponse("{\"success\": false, \"message\": \"User ID Error\"}",
                             content_type="application/json")
